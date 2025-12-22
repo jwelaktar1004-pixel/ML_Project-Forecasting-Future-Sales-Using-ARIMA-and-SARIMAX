@@ -6,21 +6,33 @@ import matplotlib.pyplot as plt
 # Page config
 st.set_page_config(page_title="Champagne Sales Forecast", layout="centered")
 
+# Title
 st.title("📈 Champagne Sales Forecasting Dashboard")
 st.write("SARIMA-based Time Series Forecasting")
 
-# Load dataset
+# ---------------- MODEL INFO PANEL ----------------
+st.markdown("### 🧠 Model Information")
+st.info(
+    """
+    **Model:** SARIMAX  
+    **Seasonality:** 12 months  
+    **Training Period:** 1964 – 1972  
+    **Forecast Output:** Monthly sales with 95% confidence interval
+    """
+)
+
+# ---------------- LOAD DATA ----------------
 df = pd.read_csv("perrin-freres-monthly-champagne.csv")
 df.columns = ["Month", "Sales"]
 df["Month"] = pd.to_datetime(df["Month"], errors="coerce")
 df = df.dropna(subset=["Month"])
 df.set_index("Month", inplace=True)
 
-# Load trained model
+# ---------------- LOAD MODEL ----------------
 with open("sarimax_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-# Forecast horizon slider
+# ---------------- USER INPUT ----------------
 forecast_months = st.slider(
     "Select forecast horizon (months)",
     min_value=1,
@@ -28,11 +40,23 @@ forecast_months = st.slider(
     value=12
 )
 
-# Generate forecast
+# ---------------- FORECAST ----------------
 forecast = model.get_forecast(steps=forecast_months)
 forecast_df = forecast.summary_frame()
 
-# Plot
+# ---------------- BUSINESS METRICS ----------------
+last_actual = df["Sales"].iloc[-1]
+next_forecast = forecast_df["mean"].iloc[0]
+growth_pct = ((next_forecast - last_actual) / last_actual) * 100
+
+st.markdown("### 📊 Key Forecast Metrics")
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Last Observed Sales", f"{last_actual:,.0f}")
+col2.metric("Next Month Forecast", f"{next_forecast:,.0f}")
+col3.metric("Expected Change", f"{growth_pct:.2f}%")
+
+# ---------------- PLOT ----------------
 fig, ax = plt.subplots(figsize=(10, 5))
 
 ax.plot(df.index, df["Sales"], label="Historical Sales", color="blue")
@@ -53,4 +77,24 @@ ax.set_ylabel("Sales")
 ax.legend()
 
 st.pyplot(fig)
+
+# ---------------- CONFIDENCE INTERPRETATION ----------------
+st.caption(
+    "🟠 The shaded area represents the **95% confidence interval**, indicating the range "
+    "within which future sales values are most likely to fall."
+)
+
+# ---------------- DOWNLOAD FORECAST ----------------
+st.markdown("### 📥 Download Forecast Data")
+
+download_df = forecast_df.reset_index()
+download_df.rename(columns={"index": "Date"}, inplace=True)
+
+st.download_button(
+    label="Download forecast as CSV",
+    data=download_df.to_csv(index=False),
+    file_name="champagne_sales_forecast.csv",
+    mime="text/csv"
+)
+
 
