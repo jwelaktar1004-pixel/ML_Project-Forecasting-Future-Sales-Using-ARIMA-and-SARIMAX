@@ -3,23 +3,12 @@ import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
 
-# Page config
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Champagne Sales Forecast", layout="centered")
 
-# Title
+# ---------------- TITLE ----------------
 st.title("📈 Champagne Sales Forecasting Dashboard")
 st.write("SARIMA-based Time Series Forecasting")
-
-# ---------------- MODEL INFO PANEL ----------------
-st.markdown("### 🧠 Model Information")
-st.info(
-    """
-    **Model:** SARIMAX  
-    **Seasonality:** 12 months  
-    **Training Period:** 1964 – 1972  
-    **Forecast Output:** Monthly sales with 95% confidence interval
-    """
-)
 
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("perrin-freres-monthly-champagne.csv")
@@ -40,20 +29,35 @@ forecast_months = st.slider(
     value=12
 )
 
+# ---------------- MODEL INFO PANEL (DYNAMIC) ----------------
+st.markdown("### 🧠 Model Information")
+st.info(
+    f"""
+    **Model:** SARIMAX  
+    **Seasonality:** 12 months  
+    **Training Period:** 1964 – 1972  
+    **Selected Forecast Horizon:** {forecast_months} months  
+    **Forecast Output:** Monthly sales with 95% confidence interval
+    """
+)
+
 # ---------------- FORECAST ----------------
 forecast = model.get_forecast(steps=forecast_months)
 forecast_df = forecast.summary_frame()
 
-# ---------------- BUSINESS METRICS ----------------
+# ---------------- BUSINESS METRICS (DYNAMIC) ----------------
 last_actual = df["Sales"].iloc[-1]
-next_forecast = forecast_df["mean"].iloc[0]
-growth_pct = ((next_forecast - last_actual) / last_actual) * 100
+selected_forecast = forecast_df["mean"].iloc[-1]
+growth_pct = ((selected_forecast - last_actual) / last_actual) * 100
 
 st.markdown("### 📊 Key Forecast Metrics")
 col1, col2, col3 = st.columns(3)
 
 col1.metric("Last Observed Sales", f"{last_actual:,.0f}")
-col2.metric("Next Month Forecast", f"{next_forecast:,.0f}")
+col2.metric(
+    f"Forecast after {forecast_months} months",
+    f"{selected_forecast:,.0f}"
+)
 col3.metric("Expected Change", f"{growth_pct:.2f}%")
 
 # ---------------- PLOT ----------------
@@ -97,4 +101,5 @@ st.download_button(
     mime="text/csv"
 )
 
-
+# ---------------- FOOTER ----------------
+st.caption("Built by Jwel Aktar | SARIMAX Time Series Forecasting | Streamlit Cloud")
