@@ -5,6 +5,14 @@
 ## 🔍 Project Overview
 This project focuses on forecasting future sales using classical time series models in Python. ARIMA and SARIMAX models were implemented to analyze historical sales data, capture trend and seasonality, and generate accurate future forecasts for business decision-making.
 
+## Streamlit App
+This project is deployed as an interactive Streamlit dashboard.
+The app allows users to:
+- Visualize historical champagne sales
+- Select forecast horizon (months)
+- View SARIMAX forecast with confidence intervals
+
+
 ## 🎯 Objective
 - Forecast future sales based on historical data
 - Identify trends and seasonal patterns
