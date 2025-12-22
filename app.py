@@ -53,3 +53,4 @@ ax.set_ylabel("Sales")
 ax.legend()
 
 st.pyplot(fig)
+
